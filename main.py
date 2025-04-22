@@ -3,9 +3,26 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
+from flask import Flask
+from threading import Thread
 
 load_dotenv()
 
+# === Flask App für Health Check ===
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is healthy!", 200
+
+def run_flask():
+    app.run(host='0.0.0.0', port=8000)
+
+def start_flask():
+    thread = Thread(target=run_flask)
+    thread.start()
+
+# === Discord Bot Setup ===
 intents = discord.Intents.default()
 intents.message_content = False
 
@@ -55,4 +72,6 @@ async def loan(interaction: discord.Interaction, betrag: str):
     except ValueError:
         await interaction.response.send_message("❌ Ungültiger Betrag. Beispiel: `/loan betrag: 200k`", ephemeral=True)
 
+# === Flask starten, dann den Bot ===
+start_flask()
 bot.run(os.getenv("DISCORD_TOKEN"))
