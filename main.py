@@ -10,10 +10,13 @@ load_dotenv()
 
 # === Flask App für Health Check ===
 app = Flask(__name__)
+bot_ready = False  # Trackt, ob der Bot einsatzbereit ist
 
 @app.route('/')
 def home():
-    return "Bot is healthy!", 200
+    if bot_ready and bot.is_ready():
+        return "Bot is healthy!", 200
+    return "Bot not ready", 503
 
 def run_flask():
     app.run(host='0.0.0.0', port=8000)
@@ -30,6 +33,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
+    global bot_ready
+    bot_ready = True
     print(f"✅ Bot online als {bot.user}")
     try:
         synced = await bot.tree.sync()
@@ -46,7 +51,10 @@ async def loan(interaction: discord.Interaction, betrag: str):
     has_role = any(role.name == REQUIRED_ROLE for role in user.roles)
 
     if not has_role:
-        await interaction.response.send_message(f"❌ Du hast keine Berechtigung, diesen Befehl zu verwenden. Du benötigst die Rolle `{REQUIRED_ROLE}`.", ephemeral=True)
+        await interaction.response.send_message(
+            f"❌ Du hast keine Berechtigung, diesen Befehl zu verwenden. Du benötigst die Rolle `{REQUIRED_ROLE}`.",
+            ephemeral=True
+        )
         return
 
     multiplier = 1
@@ -70,7 +78,9 @@ async def loan(interaction: discord.Interaction, betrag: str):
             ephemeral=True
         )
     except ValueError:
-        await interaction.response.send_message("❌ Ungültiger Betrag. Beispiel: `/loan betrag: 200k`", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ Ungültiger Betrag. Beispiel: `/loan betrag: 200k`", ephemeral=True
+        )
 
 # === Flask starten, dann den Bot ===
 start_flask()
