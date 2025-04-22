@@ -2,24 +2,9 @@ import os
 import discord
 from discord import app_commands
 from discord.ext import commands
-from flask import Flask
-from threading import Thread
 from dotenv import load_dotenv
 
 load_dotenv()
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot ist online!"
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
 
 intents = discord.Intents.default()
 intents.message_content = False
@@ -44,7 +29,7 @@ async def loan(interaction: discord.Interaction, betrag: str):
     has_role = any(role.name == REQUIRED_ROLE for role in user.roles)
 
     if not has_role:
-        await interaction.response.send_message("❌ Du hast keine Berechtigung, diesen Befehl zu verwenden.", ephemeral=True)
+        await interaction.response.send_message(f"❌ Du hast keine Berechtigung, diesen Befehl zu verwenden. Du benötigst die Rolle `{REQUIRED_ROLE}`.", ephemeral=True)
         return
 
     multiplier = 1
@@ -69,7 +54,5 @@ async def loan(interaction: discord.Interaction, betrag: str):
         )
     except ValueError:
         await interaction.response.send_message("❌ Ungültiger Betrag. Beispiel: `/loan betrag: 200k`", ephemeral=True)
-
-keep_alive()
 
 bot.run(os.getenv("DISCORD_TOKEN"))
